@@ -1,0 +1,72 @@
+---
+# - name: Install some packages
+#   yum:
+#     name:
+#       - devtoolset-7
+#       - vim
+#       - wget
+#       - bash-completion
+#       - epel-release
+#       - tree
+#       - htop
+#       - python2-pip.noarch
+#       - python2-devel
+#       - xorg-x11-server-Xorg
+#       - xorg-x11-xauth
+#       - xorg-x11-apps
+#       - ncurses-devel
+#       - rh-git218
+#       # - kmod-devel
+#       # - ansible
+#     state: latest
+#   tags:
+#     - install
+#     - yum
+
+# - name: Install pyenv
+#   shell: curl https://pyenv.run | bash
+
+# - name: Install python 3.10
+
+# - name: Update pip
+#   pip:
+#     name: pip
+#     state: latest
+#   tags:
+#     - update
+#     - pip
+
+# Pip install ansible
+
+- name: Make vimtmp dir
+  file:
+    path: ~/vimtmp
+    state: directory
+
+- name: Copy dot files
+  copy:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest | default('~/') }}"
+    backup: yes
+  with_items:
+    - src: .bash_profile
+    - src: .bashrc
+    - src: .gitconfig
+    - src: .vimrc
+    - src: .inputrc
+  tags:
+    - install
+    - config_files
+
+- name: iterm2 shell integration
+  get_url:
+    url: https://iterm2.com/shell_integration/bash
+    dest: "{{ item }}"
+    mode: "0776"
+  become: true
+  with_items:
+    - /root/.iterm2_shell_integration.bash
+    - /home/jmighion/.iterm2_shell_integration.bash
+  tags:
+    - install
+    - config_files
