@@ -62,7 +62,12 @@ alias tree='tree -aCp'
 alias rm='rm -i'
 alias cp='cp -i'
 alias mv='mv -i'
-alias build='time flamel.sh --tag asciidoc clean; time flamel.sh --tag asciidoc adoc; time flamel.sh --tag asciidoc '
+
+function az_aks_command() {
+    CMD=$1;
+    CMDOPTS=$2;
+    az aks command invoke --resource-group ${RESOURCE_GROUP} --name ${AKS_NAME} --command "${CMD}" ${CMDOPTS};
+}
 
 function rgit () {
     local dir=`pwd`
@@ -71,21 +76,6 @@ function rgit () {
     for D in */; do cd $D && echo $D && git fa && cd .. || cd ..; done
     cd $dir
 }
-
-# git bash completions. Dependent on rhgit
-#source /opt/rh-git29/root/usr/share/bash-completion/completions/git
-#source /opt/rh/rh-git218/root/usr/share/bash-completion/completions/git
-
-# Change default dir color from dark to light blue
-#LS_COLORS=$LS_COLORS:'di=1;94:' ; export LS_COLORS
-
-#source /Users/james/Documents/git-completion.bash
-#export COWPATH="/Users/james/.cowsay"
-
-# export PATH="$(brew --prefix git)/bin:$PATH"
-
-
-# eval $(thefuck --alias)
 
 function check_pr () {
     echo "Update repo data"
@@ -101,42 +91,17 @@ function check_pr () {
     git rev-list --count HEAD..upstream/main
 }
 
-
-alias spellr="aspell --mode=asciidoc --add-asciidoc-blocks="====" --add-asciidoc-blocks="----" list | sort | uniq -c | so
-rt -rn"
-alias spellrxml="aspell list | sort | uniq -c | sort -rn"
-function spellr_dir {
-  if [ -f /tmp/check-spelling-raw.txt ]
-  then
-    rm -f /tmp/check-spelling-raw.txt
-  fi
-
-  for FILE in $(ls)
-  do
-    echo ${FILE} | sed 's/\(.*\)\.[a-z]\+/\1/' >> /tmp/check-spelling-raw.txt
-  done
-  cat /tmp/check-spelling-raw.txt | sort | uniq > /tmp/check-spelling.txt
-
-  for FILE in $(cat /tmp/check-spelling.txt)
-  do
-    if [ -f ${FILE}.adoc ]
-    then
-      if [ $(cat ${FILE}.adoc | spellr | wc -l) -gt 0 ]
-      then
-        echo ${FILE}.adoc
-        cat ${FILE}.adoc | spellr
-      fi
-    fi
-    if [ -f ${FILE}.xml ]
-    then
-      if [ $(cat ${FILE}.xml | spellrxml | wc -l) -gt 0 ]
-      then
-        echo ${FILE}.xml
-        cat ${FILE}.xml | spellrxml
-      fi
-    fi
-  done
+function plar(){
+    git pla
+    git branch -r --format "%(refname:lstrip=3)" | tail -n +2 | sort -u | ggrep -v -f - <(git branch --format "%(refname:short)") | xargs -r git branch -D
 }
+
+# Change default dir color from dark to light blue
+#LS_COLORS=$LS_COLORS:'di=1;94:' ; export LS_COLORS
+
+# export PATH="$(brew --prefix git)/bin:$PATH"
+
+# eval $(thefuck --alias)
 
 wttr()
 {
