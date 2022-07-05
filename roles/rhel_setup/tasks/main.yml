@@ -1,14 +1,14 @@
 ---
-# - name: Install some packages
-#   yum:
-#     name:
+- name: Install some packages
+  yum:
+    name:
 #       - devtoolset-7
-#       - vim
-#       - wget
-#       - bash-completion
+      - vim
+      - wget
+      - bash-completion
 #       - epel-release
-#       - tree
-#       - htop
+      - tree
+      # - htop
 #       - python2-pip.noarch
 #       - python2-devel
 #       - xorg-x11-server-Xorg
@@ -16,25 +16,55 @@
 #       - xorg-x11-apps
 #       - ncurses-devel
 #       - rh-git218
+      - git
+      - podman
 #       # - kmod-devel
 #       # - ansible
-#     state: latest
-#   tags:
-#     - install
-#     - yum
+    state: latest
+  become: true
+  tags:
+    - install
+    - yum
+
+- name: Ensure hosts file is there with localhost in it
+  ansible.builtin.lineinfile:
+    path: ~/hosts
+    line: localhost
+    create: yes
+
+# Destination name must be set to a full path, not a dir and be empty the first time
+- name: Clone personal SRE repo
+  git:
+    repo: git@github.com:jmighion/ansible-azure-sre.git
+    dest: ~/ansible-azure-sre
+    update: no
 
 # - name: Install pyenv
 #   shell: curl https://pyenv.run | bash
 
 # - name: Install python 3.10
 
-# - name: Update pip
-#   pip:
-#     name: pip
-#     state: latest
-#   tags:
-#     - update
-#     - pip
+# Separately update pip first to ensure it's up to date before any other pip installs
+- name: Update pip
+  pip:
+    name:
+      - pip
+    state: latest
+    extra_args: --user
+  tags:
+    - update
+    - pip
+
+- name: Update pip
+  pip:
+    name:
+      - ansible
+      - ansible-navigator
+    state: latest
+    extra_args: --user
+  tags:
+    - update
+    - pip
 
 # Pip install ansible
 
@@ -43,10 +73,11 @@
     path: ~/vimtmp
     state: directory
 
-- name: Copy dot files
+- name: Copy over files
   copy:
     src: "{{ item.src }}"
     dest: "{{ item.dest | default('~/') }}"
+    mode: "{{ item.mode | default(omit) }}"
     backup: yes
   with_items:
     - src: .bash_profile
@@ -54,6 +85,12 @@
     - src: .gitconfig
     - src: .vimrc
     - src: .inputrc
+    - src: ~/.ssh/id_rsa
+      dest: ~/.ssh/id_rsa
+      mode: "0400"
+    - src: ~/.azure/credentials
+      dest: ~/.azure/credentials
+    - src: ~/Documents/git/ansible-azure-mgmt/tools/load_credentials.sh
   tags:
     - install
     - config_files
