@@ -78,6 +78,7 @@
       mode: "0400"
     - src: ~/.azure/credentials
       dest: ~/.azure/credentials
+    - src: .ansible-navigator.yml
     - src: ~/Documents/git/ansible-azure-mgmt/tools/load_credentials.sh
   tags:
     - install

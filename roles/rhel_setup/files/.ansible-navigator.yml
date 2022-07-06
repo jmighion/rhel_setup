@@ -1,0 +1,3 @@
+ansible-navigator:
+  playbook-artifact:
+    enable: False
