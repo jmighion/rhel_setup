@@ -43,7 +43,7 @@
     - update
     - pip
 
-- name: Update pip
+- name: Pip install things
   pip:
     name:
       - ansible
@@ -54,12 +54,13 @@
     - update
     - pip
 
-# Pip install ansible
-
-- name: Make vimtmp dir
+- name: Make dirs
   file:
-    path: ~/vimtmp
+    path: "{{ item }}"
     state: directory
+  loop:
+    - ~/vimtmp
+    - ~/.azure
 
 - name: Copy over files
   copy:
