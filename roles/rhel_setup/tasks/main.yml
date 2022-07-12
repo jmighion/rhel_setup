@@ -77,6 +77,8 @@
     - src: ~/.ssh/id_rsa
       dest: ~/.ssh/id_rsa
       mode: "0400"
+    - src: ~/.ssh/id_rsa.pub
+      dest: ~/.ssh/id_rsa.pub
     - src: ~/.azure/credentials
       dest: ~/.azure/credentials
     - src: .ansible-navigator.yml
