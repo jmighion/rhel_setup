@@ -101,7 +101,7 @@ function plar(){
 
 # export PATH="$(brew --prefix git)/bin:$PATH"
 
-# eval $(thefuck --alias)
+eval $(thefuck --alias)
 
 wttr()
 {

@@ -48,6 +48,7 @@
     name:
       - ansible
       - ansible-navigator
+      - thefuck
     state: latest
     extra_args: --user
   tags:
