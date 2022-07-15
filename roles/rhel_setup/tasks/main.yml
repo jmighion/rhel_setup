@@ -20,13 +20,6 @@
     line: localhost
     create: yes
 
-# Destination name must be set to a full path, not a dir and be empty the first time
-- name: Clone personal SRE repo
-  git:
-    repo: git@github.com:jmighion/ansible-azure-sre.git
-    dest: ~/ansible-azure-sre
-    update: no
-
 # - name: Install pyenv
 #   shell: curl https://pyenv.run | bash
 
@@ -87,6 +80,14 @@
   tags:
     - install
     - config_files
+
+# Destination name must be set to a full path, not a dir and be empty the first time
+- name: Clone personal SRE repo
+  git:
+    repo: git@github.com:jmighion/ansible-azure-sre.git
+    dest: ~/ansible-azure-sre
+    update: no
+    accept_newhostkey: yes
 
 - name: iterm2 shell integration
   get_url:
