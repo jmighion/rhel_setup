@@ -49,6 +49,7 @@
   loop:
     - ~/vimtmp
     - ~/.azure
+    - ~/tmp
   tags:
     - install
     - config_files
@@ -90,11 +91,15 @@
     - name: Run installer
       shell: curl https://pyenv.run | bash
 
+    # Need to set export TMPDIR=~/tmp because /tmp has noexec
+    # Needs the full path. I will remove my user name later.
     - name: Install python
-      command: pyenv install "{{ python_version }}"
+      shell: pyenv install "{{ python_version }}"
+      environment:
+        TMPDIR: /home/jmighion/tmp
 
     - name: Add venv
-      command: pyenv virtualenv "{{ python_version }}" "{{ python_version }}"_dev
+      shell: pyenv virtualenv "{{ python_version }}" "{{ python_version }}"_dev
   when: pyenv.rc != 0
 
 # Separately update pip first to ensure it's up to date before any other pip installs
@@ -133,6 +138,19 @@
     dest: ~/ansible-azure-sre
     update: no
     accept_newhostkey: yes
+
+- name: Add remote upstream to github projects
+  # Git module does not know how to add remotes (yet...)
+  # Using command and silencing corresponding ansible-lint rule
+  # noqa command-instead-of-module
+  command:
+    cmd: git remote add upstream git@github.com:ansible/ansible-azure-sre.git
+    chdir: ~/ansible-azure-sre
+  register: result
+  changed_when: result.rc == 0
+  failed_when:
+    - result.rc != 0
+    - result.stderr | default('') is not search("remote .* already exists")
 
 - name: iterm2 shell integration
   get_url:
