@@ -11,8 +11,8 @@ export PS1="[\u@\H \W]\\$ "
 PATH="$HOME/.local/bin:$HOME/bin:$PATH"
 export PATH
 export PATH="$HOME/.pyenv/bin:$PATH"
-eval "$(pyenv init -)"
-eval "$(pyenv virtualenv-init -)"
+if which pyenv > /dev/null; then eval "$(pyenv init --path)" && eval "$(pyenv init -)"; fi
+if which pyenv > /dev/null; then eval "$(pyenv virtualenv-init -)"; fi
 
 # export PATH="$PATH:$HOME/.rvm/bin" # Add RVM to PATH for scripting
 export HISTCONTROL=erasedups
@@ -101,7 +101,7 @@ function plar(){
 
 # export PATH="$(brew --prefix git)/bin:$PATH"
 
-eval $(thefuck --alias)
+# eval $(thefuck --alias)
 
 wttr()
 {

@@ -8,11 +8,28 @@
       - tree
       - git
       - podman
+      # for installing newer python
+      - "@Development tools"
+      - zlib-devel
+      - bzip2
+      - bzip2-devel
+      - readline-devel
+      - sqlite
+      - sqlite-devel
+      - openssl-devel
+      - xz
+      - xz-devel
+      - libffi-devel
+      - findutils
+      - tk-devel
     state: latest
   become: true
   tags:
     - install
     - yum
+
+# Install gh cli
+# https://github.com/cli/cli/blob/trunk/docs/install_linux.md#fedora-centos-red-hat-enterprise-linux-dnf
 
 - name: Ensure hosts file is there with localhost in it
   ansible.builtin.lineinfile:
@@ -20,33 +37,10 @@
     line: localhost
     create: yes
 
-# - name: Install pyenv
-#   shell: curl https://pyenv.run | bash
-
-# - name: Install python 3.10
-
-# Separately update pip first to ensure it's up to date before any other pip installs
-- name: Update pip
-  pip:
-    name:
-      - pip
-    state: latest
-    extra_args: --user
-  tags:
-    - update
-    - pip
-
-- name: Pip install things
-  pip:
-    name:
-      - ansible
-      - ansible-navigator
-      - thefuck
-    state: latest
-    extra_args: --user
-  tags:
-    - update
-    - pip
+- name: Template default python version for pyenv
+  ansible.builtin.template:
+    src: .python-version.j2
+    dest: ~/.python-version
 
 - name: Make dirs
   file:
@@ -55,6 +49,9 @@
   loop:
     - ~/vimtmp
     - ~/.azure
+  tags:
+    - install
+    - config_files
 
 - name: Copy over files
   copy:
@@ -81,6 +78,54 @@
     - install
     - config_files
 
+- name: Check for pyenv
+  command:
+    cmd: which pyenv
+  register: pyenv
+  ignore_errors: yes
+  changed_when: false
+
+- name: Install pyenv
+  block:
+    - name: Run installer
+      shell: curl https://pyenv.run | bash
+
+    - name: Install python
+      command: pyenv install "{{ python_version }}"
+
+    - name: Add venv
+      command: pyenv virtualenv "{{ python_version }}" "{{ python_version }}"_dev
+  when: pyenv.rc != 0
+
+# Separately update pip first to ensure it's up to date before any other pip installs
+- name: Update pip
+  pip:
+    name:
+      - pip
+      - setuptools
+    state: latest
+    # extra_args: --user
+    virtualenv: "~/.pyenv/versions/{{ python_version }}/envs/{{ python_version }}_dev"
+    virtualenv_command: pyenv
+  tags:
+    - update
+    - pip
+
+- name: Pip install things
+  pip:
+    name:
+      - ansible
+      - ansible-navigator
+      - ansible-lint
+      # - thefuck
+    state: latest
+    # extra_args: --user
+    virtualenv: "~/.pyenv/versions/{{ python_version }}/envs/{{ python_version }}_dev"
+    virtualenv_command: pyenv
+  tags:
+    - update
+    - pip
+
 # Destination name must be set to a full path, not a dir and be empty the first time
 - name: Clone personal SRE repo
   git:
@@ -101,3 +146,8 @@
   tags:
     - install
     - config_files
+
+- name: Pull latest image
+  containers.podman.podman_image:
+    name: quay.io/aoc/ee-aap-azure-sre
+    force: yes

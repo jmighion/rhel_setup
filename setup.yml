@@ -1,6 +1,7 @@
 - name: Setup machine with personal files
   hosts: "{{ variable_host | default('dev') }}"
-
+  vars:
+    ansible_python_interpreter: "/usr/bin/python3"
   roles:
     # - role: geerlingguy.repo-epel
     - role: rhel_setup

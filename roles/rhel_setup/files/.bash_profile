@@ -12,6 +12,3 @@ test -e "${HOME}/.iterm2_shell_integration.bash" && source "${HOME}/.iterm2_shel
 # export PATH="/usr/local/opt/gettext/bin:$PATH"
 # export PATH="/usr/local/bin:/usr/local/sbin:~/bin:$PATH"
 # export PATH="/usr/local/opt/python/libexec/bin:$PATH"
-
-if which pyenv 2> /dev/null; then eval "$(pyenv init -)"; fi
-if which pyenv-virtualenv-init 2> /dev/null; then eval "$(pyenv virtualenv-init -)"; fi
