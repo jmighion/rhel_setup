@@ -1,6 +1,9 @@
 - name: Setup machine with personal files
   hosts: "{{ variable_host | default('dev') }}"
   vars:
+    # Needed because we're building a new python version that will get used by defaut.
+    # If the playbook needs rerunning to fix anything pyenv related, it will fail to find the right python.
+    # Using the system python for safety.
     ansible_python_interpreter: "/usr/bin/python3"
   roles:
     # - role: geerlingguy.repo-epel

@@ -25,7 +25,6 @@
     state: latest
   become: true
   tags:
-    - install
     - yum
 
 # Install gh cli
@@ -51,7 +50,6 @@
     - ~/.azure
     - ~/tmp
   tags:
-    - install
     - config_files
 
 - name: Copy over files
@@ -76,7 +74,6 @@
     - src: .ansible-navigator.yml
     - src: ~/Documents/git/ansible-azure-mgmt/tools/load_credentials.sh
   tags:
-    - install
     - config_files
 
 - name: Check for pyenv
@@ -113,7 +110,6 @@
     virtualenv: "~/.pyenv/versions/{{ python_version }}/envs/{{ python_version }}_dev"
     virtualenv_command: pyenv
   tags:
-    - update
     - pip
 
 - name: Pip install things
@@ -128,7 +124,30 @@
     virtualenv: "~/.pyenv/versions/{{ python_version }}/envs/{{ python_version }}_dev"
     virtualenv_command: pyenv
   tags:
-    - update
+    - pip
+
+- name: Install collection azure.azcollection
+  community.general.ansible_galaxy_install:
+    type: collection
+    name: azure.azcollection
+  tags:
+    - galaxy
+
+- name: Install collection redhat.ansible_azure_sre
+  command:
+    cmd: ansible-galaxy collection install .
+    chdir: ~/ansible-azure-sre
+  register: result
+  changed_when: result.stdout is not search("Nothing to do")
+  tags:
+    - galaxy
+
+- name: Pip install things
+  pip:
+    requirements: ~/.ansible/collections/ansible_collections/azure/azcollection/requirements-azure.txt
+    virtualenv: "~/.pyenv/versions/{{ python_version }}/envs/{{ python_version }}_dev"
+    virtualenv_command: pyenv
+  tags:
     - pip
 
 # Destination name must be set to a full path, not a dir and be empty the first time
@@ -138,6 +157,8 @@
     dest: ~/ansible-azure-sre
     update: no
     accept_newhostkey: yes
+  tags:
+    - git
 
 - name: Add remote upstream to github projects
   # Git module does not know how to add remotes (yet...)
@@ -151,6 +172,26 @@
   failed_when:
     - result.rc != 0
     - result.stderr | default('') is not search("remote .* already exists")
+  tags:
+    - git
+
+- name: Fetch all remotes
+  command:
+    cmd: git fetch --all
+    chdir: ~/ansible-azure-sre
+  register: result
+  changed_when: false
+  tags:
+    - git
+
+- name: Switch to upstream/main
+  git:
+    repo: git@github.com:ansible/ansible-azure-sre.git
+    dest: ~/ansible-azure-sre
+    remote: upstream
+    version: upstream/main
+  tags:
+    - git
 
 - name: iterm2 shell integration
   get_url:
@@ -162,7 +203,6 @@
     - /root/.iterm2_shell_integration.bash
     - /home/jmighion/.iterm2_shell_integration.bash
   tags:
-    - install
     - config_files
 
 - name: Pull latest image
