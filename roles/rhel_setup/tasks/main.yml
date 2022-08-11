@@ -8,7 +8,7 @@
       - tree
       - git
       - podman
-      # for installing newer python
+      # for installing newer python, might be able to trim this down
       - "@Development tools"
       - zlib-devel
       - bzip2
@@ -35,11 +35,15 @@
     path: ~/hosts
     line: localhost
     create: yes
+  tags:
+    - config_files
 
 - name: Template default python version for pyenv
   ansible.builtin.template:
     src: .python-version.j2
     dest: ~/.python-version
+  tags:
+    - config_files
 
 - name: Template .ansible-navigator.yml
   ansible.builtin.template:
@@ -81,6 +85,7 @@
   tags:
     - config_files
 
+# This is only here because my local machine's is slightly different and has a private token, so copying it over and changing it.
 - name: Ensure hosts file is set in .ansible.cfg
   ansible.builtin.lineinfile:
     path: ~/.ansible.cfg
@@ -95,6 +100,7 @@
   ignore_errors: yes
   changed_when: false
 
+# This could be broken up into separate checks and installations to avoid problems if it bails during the python install.
 - name: Install pyenv
   block:
     - name: Run installer
@@ -117,7 +123,6 @@
       - pip
       - setuptools
     state: latest
-    # extra_args: --user
     virtualenv: "~/.pyenv/versions/{{ python_version }}/envs/{{ python_version }}_dev"
     virtualenv_command: pyenv
   tags:
@@ -131,7 +136,6 @@
       - ansible-lint
       # - thefuck
     state: latest
-    # extra_args: --user
     virtualenv: "~/.pyenv/versions/{{ python_version }}/envs/{{ python_version }}_dev"
     virtualenv_command: pyenv
   tags:
@@ -152,7 +156,6 @@
   tags:
     - pip
 
-# Destination name must be set to a full path, not a dir and be empty the first time
 - name: Clone personal SRE repo
   ansible.builtin.git:
     repo: git@github.com:{{ ansible_user_id }}/ansible-azure-sre.git
