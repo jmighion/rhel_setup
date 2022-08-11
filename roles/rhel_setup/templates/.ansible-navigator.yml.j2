@@ -1,0 +1,28 @@
+ansible-navigator:
+  execution-environment:
+    environment-variables:
+      pass:
+        - AZURE_CLIENT_ID
+        - AZURE_SECRET
+        - AZURE_SUBSCRIPTION_ID
+        - AZURE_TENANT
+      set:
+        # Needed because navigator or runner sets the callback with an env var, overriding what's in the cfg.
+        ANSIBLE_STDOUT_CALLBACK: yaml
+        # This is needed to get the redhat.ansible_azure_sre collection since it's not in the EE
+        ANSIBLE_COLLECTIONS_PATHS: /home/runner/.ansible/collections:/usr/share/ansible/collections:/dev_collections/collections
+    image: quay.io/aoc/ee-aap-azure-sre
+    pull:
+      policy: never
+    volume-mounts:
+      # Paths have to be full
+      # Mounting the user's collections to have access to them all in the EE
+      # Should be able to remove this after we fix the SRE EE
+      - src: "/home/{{ ansible_user_id }}/.ansible/collections/ansible_collections/"
+        dest: "/dev_collections/collections/ansible_collections/"
+        options: "Z"
+      - src: "/home/{{ ansible_user_id }}/.ansible.cfg"
+        dest: "/etc/ansible/ansible.cfg"
+  mode: stdout
+  playbook-artifact:
+    enable: False

@@ -1,6 +1,6 @@
 ---
 - name: Install some packages
-  yum:
+  ansible.builtin.yum:
     name:
       - vim
       - wget
@@ -41,8 +41,13 @@
     src: .python-version.j2
     dest: ~/.python-version
 
+- name: Template .ansible-navigator.yml
+  ansible.builtin.template:
+    src: .ansible-navigator.yml.j2
+    dest: ~/.ansible-navigator.yml
+
 - name: Make dirs
-  file:
+  ansible.builtin.file:
     path: "{{ item }}"
     state: directory
   loop:
@@ -53,31 +58,38 @@
     - config_files
 
 - name: Copy over files
-  copy:
+  ansible.builtin.copy:
     src: "{{ item.src }}"
     dest: "{{ item.dest | default('~/') }}"
     mode: "{{ item.mode | default(omit) }}"
     backup: yes
   with_items:
-    - src: .bash_profile
+    - src: ~/.ansible.cfg
+    - src: ~/.azure/credentials
+      dest: ~/.azure/credentials
     - src: .bashrc
+    - src: .bash_profile
     - src: .gitconfig
-    - src: .vimrc
     - src: .inputrc
+    - src: ~/Documents/git/ansible-azure-mgmt/tools/load_credentials.sh
     - src: ~/.ssh/id_rsa
       dest: ~/.ssh/id_rsa
       mode: "0400"
     - src: ~/.ssh/id_rsa.pub
       dest: ~/.ssh/id_rsa.pub
-    - src: ~/.azure/credentials
-      dest: ~/.azure/credentials
-    - src: .ansible-navigator.yml
-    - src: ~/Documents/git/ansible-azure-mgmt/tools/load_credentials.sh
+    - src: .vimrc
   tags:
     - config_files
 
+- name: Ensure hosts file is set in .ansible.cfg
+  ansible.builtin.lineinfile:
+    path: ~/.ansible.cfg
+    regexp: '^inventory      ='
+    line: inventory      = ~/hosts
+    create: yes
+
 - name: Check for pyenv
-  command:
+  ansible.builtin.command:
     cmd: which pyenv
   register: pyenv
   ignore_errors: yes
@@ -86,22 +98,21 @@
 - name: Install pyenv
   block:
     - name: Run installer
-      shell: curl https://pyenv.run | bash
+      ansible.builtin.shell: curl https://pyenv.run | bash
 
     # Need to set export TMPDIR=~/tmp because /tmp has noexec
-    # Needs the full path. I will remove my user name later.
     - name: Install python
-      shell: pyenv install "{{ python_version }}"
+      ansible.builtin.shell: pyenv install "{{ python_version }}"
       environment:
-        TMPDIR: /home/jmighion/tmp
+        TMPDIR: /home/{{ ansible_user_id }}/tmp
 
     - name: Add venv
-      shell: pyenv virtualenv "{{ python_version }}" "{{ python_version }}"_dev
+      ansible.builtin.shell: pyenv virtualenv "{{ python_version }}" "{{ python_version }}"_dev
   when: pyenv.rc != 0
 
 # Separately update pip first to ensure it's up to date before any other pip installs
 - name: Update pip
-  pip:
+  ansible.builtin.pip:
     name:
       - pip
       - setuptools
@@ -113,7 +124,7 @@
     - pip
 
 - name: Pip install things
-  pip:
+  ansible.builtin.pip:
     name:
       - ansible
       - ansible-navigator
@@ -126,24 +137,15 @@
   tags:
     - pip
 
-- name: Install collection azure.azcollection
+- name: Galaxy install collection azure.azcollection
   community.general.ansible_galaxy_install:
     type: collection
     name: azure.azcollection
   tags:
     - galaxy
 
-- name: Install collection redhat.ansible_azure_sre
-  command:
-    cmd: ansible-galaxy collection install .
-    chdir: ~/ansible-azure-sre
-  register: result
-  changed_when: result.stdout is not search("Nothing to do")
-  tags:
-    - galaxy
-
-- name: Pip install things
-  pip:
+- name: Pip install azure.azcollection requirements
+  ansible.builtin.pip:
     requirements: ~/.ansible/collections/ansible_collections/azure/azcollection/requirements-azure.txt
     virtualenv: "~/.pyenv/versions/{{ python_version }}/envs/{{ python_version }}_dev"
     virtualenv_command: pyenv
@@ -152,8 +154,8 @@
 
 # Destination name must be set to a full path, not a dir and be empty the first time
 - name: Clone personal SRE repo
-  git:
-    repo: git@github.com:jmighion/ansible-azure-sre.git
+  ansible.builtin.git:
+    repo: git@github.com:{{ ansible_user_id }}/ansible-azure-sre.git
     dest: ~/ansible-azure-sre
     update: no
     accept_newhostkey: yes
@@ -164,7 +166,7 @@
   # Git module does not know how to add remotes (yet...)
   # Using command and silencing corresponding ansible-lint rule
   # noqa command-instead-of-module
-  command:
+  ansible.builtin.command:
     cmd: git remote add upstream git@github.com:ansible/ansible-azure-sre.git
     chdir: ~/ansible-azure-sre
   register: result
@@ -176,7 +178,7 @@
     - git
 
 - name: Fetch all remotes
-  command:
+  ansible.builtin.command:
     cmd: git fetch --all
     chdir: ~/ansible-azure-sre
   register: result
@@ -185,7 +187,7 @@
     - git
 
 - name: Switch to upstream/main
-  git:
+  ansible.builtin.git:
     repo: git@github.com:ansible/ansible-azure-sre.git
     dest: ~/ansible-azure-sre
     remote: upstream
@@ -193,15 +195,24 @@
   tags:
     - git
 
+- name: Galaxy install collection redhat.ansible_azure_sre
+  ansible.builtin.command:
+    cmd: ansible-galaxy collection install .
+    chdir: ~/ansible-azure-sre
+  register: result
+  changed_when: result.stdout is not search("Nothing to do")
+  tags:
+    - galaxy
+
 - name: iterm2 shell integration
-  get_url:
+  ansible.builtin.get_url:
     url: https://iterm2.com/shell_integration/bash
     dest: "{{ item }}"
     mode: "0776"
   become: true
   with_items:
     - /root/.iterm2_shell_integration.bash
-    - /home/jmighion/.iterm2_shell_integration.bash
+    - /home/{{ ansible_user_id }}/.iterm2_shell_integration.bash
   tags:
     - config_files
 
