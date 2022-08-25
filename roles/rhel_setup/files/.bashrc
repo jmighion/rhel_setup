@@ -93,7 +93,7 @@ function check_pr () {
 
 function plar(){
     git pla
-    git branch -r --format "%(refname:lstrip=3)" | tail -n +2 | sort -u | ggrep -v -f - <(git branch --format "%(refname:short)") | xargs -r git branch -D
+    git branch -r --format "%(refname:lstrip=3)" | tail -n +2 | sort -u | grep -v -f - <(git branch --format "%(refname:short)") | xargs -r git branch -D
 }
 
 # Change default dir color from dark to light blue
@@ -109,3 +109,7 @@ wttr()
     [ "$(tput cols)" -lt 125 ]
     curl -H "Accept-Language: ${LANG%_*}" --compressed "$request"
 }
+
+# Load default Azure creds
+source ~/load_credentials.sh
+cd ansible-azure-sre/

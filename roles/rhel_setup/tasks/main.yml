@@ -1,5 +1,5 @@
 ---
-- name: Install some packages
+- name: Install some packages # noqa package-latest
   ansible.builtin.yum:
     name:
       - vim
@@ -34,7 +34,8 @@
   ansible.builtin.lineinfile:
     path: ~/hosts
     line: localhost
-    create: yes
+    create: true
+    mode: "640"
   tags:
     - config_files
 
@@ -42,6 +43,7 @@
   ansible.builtin.template:
     src: .python-version.j2
     dest: ~/.python-version
+    mode: "640"
   tags:
     - config_files
 
@@ -49,11 +51,13 @@
   ansible.builtin.template:
     src: .ansible-navigator.yml.j2
     dest: ~/.ansible-navigator.yml
+    mode: "640"
 
 - name: Make dirs
   ansible.builtin.file:
     path: "{{ item }}"
     state: directory
+    mode: "750"
   loop:
     - ~/vimtmp
     - ~/.azure
@@ -66,7 +70,7 @@
     src: "{{ item.src }}"
     dest: "{{ item.dest | default('~/') }}"
     mode: "{{ item.mode | default(omit) }}"
-    backup: yes
+    backup: true
   with_items:
     - src: ~/.ansible.cfg
     - src: ~/.azure/credentials
@@ -91,33 +95,34 @@
     path: ~/.ansible.cfg
     regexp: '^inventory      ='
     line: inventory      = ~/hosts
-    create: yes
+    create: true
+    mode: "640"
 
 - name: Check for pyenv
   ansible.builtin.command:
     cmd: which pyenv
   register: pyenv
-  ignore_errors: yes
+  ignore_errors: true
   changed_when: false
 
 # This could be broken up into separate checks and installations to avoid problems if it bails during the python install.
 - name: Install pyenv
   block:
-    - name: Run installer
+    - name: Run installer # noqa command-instead-of-module no-changed-when
       ansible.builtin.shell: curl https://pyenv.run | bash
 
     # Need to set export TMPDIR=~/tmp because /tmp has noexec
-    - name: Install python
+    - name: Install python # noqa command-instead-of-shell no-changed-when
       ansible.builtin.shell: pyenv install "{{ python_version }}"
       environment:
         TMPDIR: /home/{{ ansible_user_id }}/tmp
 
-    - name: Add venv
+    - name: Add venv  # noqa command-instead-of-shell no-changed-when
       ansible.builtin.shell: pyenv virtualenv "{{ python_version }}" "{{ python_version }}"_dev
   when: pyenv.rc != 0
 
 # Separately update pip first to ensure it's up to date before any other pip installs
-- name: Update pip
+- name: Update pip # noqa package-latest
   ansible.builtin.pip:
     name:
       - pip
@@ -128,13 +133,12 @@
   tags:
     - pip
 
-- name: Pip install things
+- name: Pip install things # noqa package-latest
   ansible.builtin.pip:
     name:
       - ansible
       - ansible-navigator
       - ansible-lint
-      # - thefuck
     state: latest
     virtualenv: "~/.pyenv/versions/{{ python_version }}/envs/{{ python_version }}_dev"
     virtualenv_command: pyenv
@@ -156,12 +160,12 @@
   tags:
     - pip
 
-- name: Clone personal SRE repo
+- name: Clone personal SRE repo # noqa git-latest
   ansible.builtin.git:
     repo: git@github.com:{{ ansible_user_id }}/ansible-azure-sre.git
     dest: ~/ansible-azure-sre
-    update: no
-    accept_newhostkey: yes
+    update: false
+    accept_newhostkey: true
   tags:
     - git
 
@@ -180,7 +184,7 @@
   tags:
     - git
 
-- name: Fetch all remotes
+- name: Fetch all remotes # noqa command-instead-of-module
   ansible.builtin.command:
     cmd: git fetch --all
     chdir: ~/ansible-azure-sre
@@ -207,19 +211,23 @@
   tags:
     - galaxy
 
-- name: iterm2 shell integration
+- name: Add iterm2 shell integration
   ansible.builtin.get_url:
     url: https://iterm2.com/shell_integration/bash
-    dest: "{{ item }}"
-    mode: "0776"
+    dest: "{{ item.dest }}"
+    mode: "776"
+    owner: "{{ item.user }}"
+    group: "{{ item.user }}"
   become: true
   with_items:
-    - /root/.iterm2_shell_integration.bash
-    - /home/{{ ansible_user_id }}/.iterm2_shell_integration.bash
+    - dest: /root/.iterm2_shell_integration.bash
+      user: root
+    - dest: /home/{{ ansible_user_id }}/.iterm2_shell_integration.bash
+      user: "{{ ansible_user_id }}"
   tags:
     - config_files
 
 - name: Pull latest image
   containers.podman.podman_image:
     name: quay.io/aoc/ee-aap-azure-sre
-    force: yes
+    force: true
