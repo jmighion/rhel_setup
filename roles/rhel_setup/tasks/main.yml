@@ -70,9 +70,10 @@
     src: "{{ item.src }}"
     dest: "{{ item.dest | default('~/') }}"
     mode: "{{ item.mode | default(omit) }}"
-    backup: true
+    backup: "{{ item.backup | default(true) }}"
   with_items:
     - src: ~/.ansible.cfg
+      backup: false
     - src: ~/.azure/credentials
       dest: ~/.azure/credentials
     - src: .bashrc
