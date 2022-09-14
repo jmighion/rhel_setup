@@ -57,7 +57,7 @@
         sp = stash pop
         sa = stash apply
         premo = !git remote | awk '{print $1}' | xargs -r git remote prune
-        pla = !git premo && !git branch -v | grep '\\[gone\\]' | awk '{print $1}' | xargs -r git branch -D
+        pla = !git premo && git branch -v | grep '\\[gone\\]' | awk '{print $1}' | xargs -r git branch -D
 
 [difftool "sourcetree"]
         cmd = opendiff \"$LOCAL\" \"$REMOTE\"

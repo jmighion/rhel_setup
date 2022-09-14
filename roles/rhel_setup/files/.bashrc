@@ -14,6 +14,17 @@ export PATH="$HOME/.pyenv/bin:$PATH"
 if which pyenv > /dev/null; then eval "$(pyenv init --path)" && eval "$(pyenv init -)"; fi
 if which pyenv > /dev/null; then eval "$(pyenv virtualenv-init -)"; fi
 
+export PYENV_VIRTUALENV_DISABLE_PROMPT=1
+export BASE_PROMPT=$PS1
+function updatePrompt {
+    if [[ "$(pyenv version-name)" != "system" ]]; then
+        export PS1='($(pyenv version-name)) '$BASE_PROMPT
+    else
+        export PS1=$BASE_PROMPT
+    fi
+}
+export PROMPT_COMMAND='updatePrompt'
+
 # export PATH="$PATH:$HOME/.rvm/bin" # Add RVM to PATH for scripting
 export HISTCONTROL=erasedups
 
