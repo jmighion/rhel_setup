@@ -122,5 +122,6 @@ wttr()
 }
 
 # Load default Azure creds
-source ~/load_credentials.sh
+source ~/load_credentials.sh ansible-sre-{{ group_names[1] }}
 cd ansible-azure-sre/
+source <(kubectl completion bash)

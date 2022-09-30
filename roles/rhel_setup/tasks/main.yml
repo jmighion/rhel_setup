@@ -39,19 +39,20 @@
   tags:
     - config_files
 
-- name: Template default python version for pyenv
+- name: Template some files
   ansible.builtin.template:
-    src: .python-version.j2
-    dest: ~/.python-version
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
     mode: "640"
+  loop:
+    - src: .python-version.j2
+      dest: ~/.python-version
+    - src: .ansible-navigator.yml.j2
+      dest: ~/.ansible-navigator.yml
+    - src: .bashrc.j2
+      dest: ~/.bashrc
   tags:
     - config_files
-
-- name: Template .ansible-navigator.yml
-  ansible.builtin.template:
-    src: .ansible-navigator.yml.j2
-    dest: ~/.ansible-navigator.yml
-    mode: "640"
 
 - name: Make dirs
   ansible.builtin.file:
@@ -76,7 +77,6 @@
       backup: false
     - src: ~/.azure/credentials
       dest: ~/.azure/credentials
-    - src: .bashrc
     - src: .bash_profile
     - src: .gitconfig
     - src: .inputrc
