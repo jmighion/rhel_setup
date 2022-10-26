@@ -16,6 +16,9 @@ ansible-navigator:
       # Paths have to be full
       - src: "/home/{{ ansible_user_id }}/.ansible.cfg"
         dest: "/etc/ansible/ansible.cfg"
+  logging:
+    file: ~/ansible-navigator.log
+    level: error
   mode: stdout
   playbook-artifact:
     enable: False
