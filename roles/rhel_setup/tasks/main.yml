@@ -108,6 +108,7 @@
 
 # This could be broken up into separate checks and installations to avoid problems if it bails during the python install.
 - name: Install pyenv
+  when: pyenv.rc != 0
   block:
     - name: Run installer # noqa command-instead-of-module no-changed-when
       ansible.builtin.shell: curl https://pyenv.run | bash
@@ -120,7 +121,7 @@
 
     - name: Add venv  # noqa command-instead-of-shell no-changed-when
       ansible.builtin.shell: pyenv virtualenv "{{ python_version }}" "{{ python_version }}"_dev
-  when: pyenv.rc != 0
+
 
 # Separately update pip first to ensure it's up to date before any other pip installs
 - name: Update pip # noqa package-latest
@@ -163,10 +164,13 @@
 
 - name: Clone personal SRE repo # noqa git-latest
   ansible.builtin.git:
-    repo: git@github.com:{{ ansible_user_id }}/ansible-azure-sre.git
-    dest: ~/ansible-azure-sre
+    repo: git@github.com:{{ ansible_user_id }}/{{ item }}.git
+    dest: ~/{{ item }}
     update: false
     accept_newhostkey: true
+  loop:
+    - ansible-azure-sre
+    - managed_azure
   tags:
     - git
 
@@ -175,8 +179,11 @@
   # Using command and silencing corresponding ansible-lint rule
   # noqa command-instead-of-module
   ansible.builtin.command:
-    cmd: git remote add upstream git@github.com:ansible/ansible-azure-sre.git
-    chdir: ~/ansible-azure-sre
+    cmd: git remote add upstream git@github.com:ansible/{{ item }}.git
+    chdir: ~/{{ item }}
+  loop:
+    - ansible-azure-sre
+    - managed_azure
   register: result
   changed_when: result.rc == 0
   failed_when:
@@ -188,25 +195,33 @@
 - name: Fetch all remotes # noqa command-instead-of-module
   ansible.builtin.command:
     cmd: git fetch --all
-    chdir: ~/ansible-azure-sre
-  register: result
+    chdir: ~/{{ item }}
+  loop:
+    - ansible-azure-sre
+    - managed_azure
   changed_when: false
   tags:
     - git
 
 - name: Switch to upstream/main
   ansible.builtin.git:
-    repo: git@github.com:ansible/ansible-azure-sre.git
-    dest: ~/ansible-azure-sre
+    repo: git@github.com:ansible/{{ item }}.git
+    dest: ~/{{ item }}
     remote: upstream
     version: upstream/main
+  loop:
+    - ansible-azure-sre
+    - managed_azure
   tags:
     - git
 
 - name: Galaxy install collection redhat.ansible_azure_sre
   ansible.builtin.command:
     cmd: ansible-galaxy collection install .
-    chdir: ~/ansible-azure-sre
+    chdir: ~/{{ item }}
+  loop:
+    - ansible-azure-sre
+    - managed_azure
   register: result
   changed_when: result.stdout is not search("Nothing to do")
   tags:
@@ -223,8 +238,10 @@
   with_items:
     - dest: /root/.iterm2_shell_integration.bash
       user: root
+      group: root
     - dest: /home/{{ ansible_user_id }}/.iterm2_shell_integration.bash
       user: "{{ ansible_user_id }}"
+      group: users
   tags:
     - config_files
 
