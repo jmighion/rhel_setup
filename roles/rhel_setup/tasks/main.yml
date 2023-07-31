@@ -111,7 +111,7 @@
   when: pyenv.rc != 0
   block:
     - name: Run installer # noqa command-instead-of-module no-changed-when
-      ansible.builtin.shell: curl https://pyenv.run | bash
+      ansible.builtin.shell: set -o pipefail && curl https://pyenv.run | bash
 
     # Need to set export TMPDIR=~/tmp because /tmp has noexec
     - name: Install python # noqa command-instead-of-shell no-changed-when
@@ -162,7 +162,7 @@
   tags:
     - pip
 
-- name: Clone personal SRE repo # noqa git-latest
+- name: Clone personal SRE repo # noqa latest[git]
   ansible.builtin.git:
     repo: git@github.com:{{ ansible_user_id }}/{{ item }}.git
     dest: ~/{{ item }}
@@ -233,7 +233,7 @@
     dest: "{{ item.dest }}"
     mode: "776"
     owner: "{{ item.user }}"
-    group: "{{ item.user }}"
+    group: "{{ item.group }}"
   become: true
   with_items:
     - dest: /root/.iterm2_shell_integration.bash
