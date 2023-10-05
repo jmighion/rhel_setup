@@ -6,5 +6,3 @@ Host *.redhat.com
   GSSAPIAuthentication yes
   GSSAPIDelegateCredentials no
   # https://mojo.redhat.com/docs/DOC-1069454 says never delegate credentials
-
-

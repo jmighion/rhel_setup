@@ -13,7 +13,7 @@ ansible-navigator:
         # ANSIBLE_COLLECTIONS_PATHS: /dev_collections/collections:/home/runner/.ansible/collections:/usr/share/ansible/collections
     image: quay.io/aoc/ee-aap-azure-sre
     pull:
-      policy: never
+      policy: missing
     volume-mounts:
       # Paths have to be full
       # Mounting the user's collections to have access to them all in the EE
