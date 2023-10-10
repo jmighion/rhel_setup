@@ -22,6 +22,8 @@
       - libffi-devel
       - findutils
       - tk-devel
+      - oniguruma
+      - oniguruma-devel
     state: latest
   become: true
   tags:
@@ -151,6 +153,7 @@
   community.general.ansible_galaxy_install:
     type: collection
     name: azure.azcollection
+    force: true
   tags:
     - galaxy
 
