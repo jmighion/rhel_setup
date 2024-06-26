@@ -106,6 +106,7 @@ function check_pr () {
 }
 
 function plar(){
+    git fa
     git pla
     git branch -r --format "%(refname:lstrip=3)" | tail -n +2 | sort -u | grep -v -f - <(git branch --format "%(refname:short)") | xargs -r git branch -D
 }
