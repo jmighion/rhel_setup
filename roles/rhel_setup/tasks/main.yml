@@ -159,7 +159,7 @@
 
 - name: Pip install azure.azcollection requirements
   ansible.builtin.pip:
-    requirements: ~/.ansible/collections/ansible_collections/azure/azcollection/requirements-azure.txt
+    requirements: ~/.ansible/collections/ansible_collections/azure/azcollection/requirements.txt
     virtualenv: "~/.pyenv/versions/{{ python_version }}/envs/{{ python_version }}_dev"
     virtualenv_command: pyenv
   tags:
