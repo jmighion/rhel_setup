@@ -1,6 +1,6 @@
 ---
 - name: Install some packages # noqa package-latest
-  ansible.builtin.yum:
+  ansible.builtin.dnf:
     name:
       - vim
       - wget
