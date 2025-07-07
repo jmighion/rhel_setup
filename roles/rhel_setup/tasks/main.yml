@@ -8,6 +8,7 @@
       - tree
       - git
       - podman
+      - skopeo
       # for installing newer python, might be able to trim this down
       - "@Development tools"
       - zlib-devel
